@@ -1,3 +1,9 @@
-Simple Ruby access to the EBAY FINDING API: http://developer.ebay.com/products/finding/
+= Simple Ruby access to the EBAY FINDING API: http://developer.ebay.com/products/finding/
 
 All calls are returned as Hashes extracted from the returned JSON root "...Response" node.
+
+== Installation
+
+* Clone this project into your Rails vendor/plugins directory
+* Copy the ebay_finding.yml.tmp to your Rails /config/ directory as ebay_finding.yml
+* Edit the :app_id to your Ebay Developer APP_ID

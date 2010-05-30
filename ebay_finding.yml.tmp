@@ -1,6 +1,6 @@
 ---
 # CONFIGURATION FOR INTERACTING WITH THE EBAY FINDING API http://developer.ebay.com/products/finding/
-# A copy of this file named "ebay-finding.yml" should be placed in your Rails /config/ directory
+# A copy of this file named "ebay_finding.yml" should be placed in your Rails /config/ directory
 # Replace the :app_id: with your app id from Ebay (required).
 #
 # :development and other alternate environments can be added.

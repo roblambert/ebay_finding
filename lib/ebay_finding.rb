@@ -102,7 +102,7 @@ module EbayFinding
   # access to configuration parameters stored in ebay-finding.yml
   def self.config_params
     return @@config_params if @@config_params
-    params = YAML.load_file("#{RAILS_ROOT}/config/ebay-finding.yml")
+    params = YAML.load_file("#{RAILS_ROOT}/config/ebay_finding.yml")
     @@config_params = params[RAILS_ENV.to_sym] || params[:production]
   end
 
