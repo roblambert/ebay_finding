@@ -1,4 +1,5 @@
-= Simple Ruby access to the EBAY FINDING API: http://developer.ebay.com/products/finding/
+= Simple Ruby access to the Ebay Finding API
+http://developer.ebay.com/products/finding/
 
 All calls are returned as Hashes extracted from the returned JSON root "...Response" node.
 
