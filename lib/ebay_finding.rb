@@ -4,6 +4,58 @@ require 'json'
 # module to ease retrieving data from the Ebay Finding API: http://developer.ebay.com/products/finding/
 module EbayFinding
   
+  # calls the "findItemsAdvanced" operation and returns the 'findItemsAdvancedResponse' JSON as a Hash.
+  # aims to make it easy to search by keyword and category as that's the most common search that I perform!
+  # extra_params are used explicitly in the request and override any base parameters including app_id, affiliate keys, etc.  
+  def self.find_items( keywords, category = nil, numResults = 5, sort = :end_time_soonest, extra_params = {} )
+    params = {
+      "paginationInput.entriesPerPage" => numResults,
+      "sortOrder" => SORT_OPTIONS[sort]||sort
+    }
+    params['keywords'] = keywords if keywords
+    params['categoryId'] = TOP_LEVEL_US_CATEGORIES[category]||category if TOP_LEVEL_US_CATEGORIES[category]||category
+    params.merge!(extra_params)
+    fetch_as_json(build_url(:find_items, params))['findItemsAdvancedResponse']
+  end
+  
+  # calls the "getHistograms" operation for a given category and returns the 'getHistogramsResponse' JSON as a Hash
+  def self.histograms( category, extra_params = {})
+    params = { "categoryId" => TOP_LEVEL_US_CATEGORIES[category]||category }.merge!(extra_params)
+    fetch_as_json(build_url(:histograms, params))['getHistogramsResponse']
+  end
+  
+  # calls the "getKeywordsRecommendations" operation for the provided keywords argument and returns the 'getSearchKeywordsRecommendationResponse' JSON as a Hash
+  def self.keyword_recommendations(keywords, extra_params = {})
+    fetch_as_json(build_url(:keyword_recommendations, {'keywords'=>keywords}.merge!(extra_params)))['getSearchKeywordsRecommendationResponse']
+  end
+
+  private
+
+  def self.fetch_as_json(url)
+    JSON.parse( open(url, "UserAgent" => config_params[:user_agent]).read )
+  end
+
+  def self.build_url(operation, operation_params = {})
+    # build standard app_id and affiliate parameters
+    params = STANDARD_PARAMETERS.keys.inject({}) { |params,key| params[STANDARD_PARAMETERS[key]] = config_params[key] if config_params[key]; params }
+    # add operation parameter
+    params['OPERATION-NAME'] = OPERATIONS.fetch(operation) || operation
+    # add operation_params provided
+    params.merge!(operation_params)
+    "#{BASE_URL}#{params.keys.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
+  end
+  
+  # access to configuration parameters stored in ebay-finding.yml
+  def self.config_params
+    return @@config_params if @@config_params
+    params = YAML.load_file("#{RAILS_ROOT}/config/ebay_finding.yml")
+    @@config_params = params[RAILS_ENV.to_sym] || params[:production]
+  end
+
+  @@config_params = nil
+  
+  BASE_URL = "http://svcs.ebay.com/services/search/FindingService/v1?RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD"
+
   # Item sort options. See http://developer.ebay.com/devzone/finding/CallRef/findItemsByKeywords.html#Request.sortOrder
   SORT_OPTIONS = {
     :best_match => "BestMatch", # 	Sorts items by Best Match, which is based on community buying activity and other relevance-based factors (default sort for most methods)
@@ -56,58 +108,6 @@ module EbayFinding
     :everything_else=>"99",
     :partner=>"10159"
   }
-  
-  # calls the "findItemsAdvanced" operation and returns the 'findItemsAdvancedResponse' JSON as a Hash.
-  # aims to make it easy to search by keyword and category as that's the most common search that I perform!
-  # extra_params are used explicitly in the request and override any base parameters including app_id, affiliate keys, etc.  
-  def self.find_items( keywords, category = nil, numResults = 5, sort = :end_time_soonest, extra_params = {} )
-    params = {
-      "paginationInput.entriesPerPage" => numResults,
-      "sortOrder" => SORT_OPTIONS[sort]||sort
-    }
-    params['keywords'] = keywords if keywords
-    params['categoryId'] = TOP_LEVEL_US_CATEGORIES[category]||category if TOP_LEVEL_US_CATEGORIES[category]||category
-    params.merge!(extra_params)
-    fetch_as_json(build_url(:find_items, params))['findItemsAdvancedResponse']
-  end
-  
-  # calls the "getHistograms" operation for a given category and returns the 'getHistogramsResponse' JSON as a Hash
-  def self.histograms( category, extra_params = {})
-    params = { "categoryId" => TOP_LEVEL_US_CATEGORIES[category]||category }.merge!(extra_params)
-    fetch_as_json(build_url(:histograms, params))['getHistogramsResponse']
-  end
-  
-  # calls the "getKeywordsRecommendations" operation for the provided keywords argument and returns the 'getSearchKeywordsRecommendationResponse' JSON as a Hash
-  def self.keyword_recommendations(keywords, extra_params = {})
-    fetch_as_json(build_url(:keyword_recommendations, {'keywords'=>keywords}.merge!(extra_params)))['getSearchKeywordsRecommendationResponse']
-  end
-
-  private
-
-  def self.fetch_as_json(url)
-    JSON.parse( open(url, "UserAgent" => config_params[:user_agent]).read )
-  end
-
-  def self.build_url(operation, operation_params = {})
-    # build standard app_id and affiliate parameters
-    params = STANDARD_PARAMETERS.keys.inject({}) { |params,key| params[STANDARD_PARAMETERS[key]] = config_params[key] if config_params[key]; params }
-    # add operation parameter
-    params['OPERATION-NAME'] = OPERATIONS.fetch(operation) || operation
-    # add operation_params provided
-    params.merge!(operation_params)
-    "#{BASE_URL}#{params.keys.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
-  end
-  
-  # access to configuration parameters stored in ebay-finding.yml
-  def self.config_params
-    return @@config_params if @@config_params
-    params = YAML.load_file("#{RAILS_ROOT}/config/ebay_finding.yml")
-    @@config_params = params[RAILS_ENV.to_sym] || params[:production]
-  end
-
-  @@config_params = nil
-  
-  BASE_URL = "http://svcs.ebay.com/services/search/FindingService/v1?RESPONSE-DATA-FORMAT=JSON&REST-PAYLOAD"
 
   OPERATIONS = {
     :keyword_recommendations => "getSearchKeywordsRecommendation", # Get recommended keywords for search
