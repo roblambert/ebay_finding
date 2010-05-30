@@ -60,7 +60,7 @@ module EbayFinding
   # calls the "findItemsAdvanced" operation and returns the 'findItemsAdvancedResponse' JSON as a Hash.
   # aims to make it easy to search by keyword and category as that's the most common search that I perform!
   # extra_params are used explicitly in the request and override any base parameters including app_id, affiliate keys, etc.  
-  def self.find_advanced( keywords, category = nil, numResults = 5, sort = :end_time_soonest, extra_params = {} )
+  def self.find_items( keywords, category = nil, numResults = 5, sort = :end_time_soonest, extra_params = {} )
     params = {
       "paginationInput.entriesPerPage" => numResults,
       "sortOrder" => SORT_OPTIONS[sort]||sort
@@ -68,7 +68,7 @@ module EbayFinding
     params['keywords'] = keywords if keywords
     params['categoryId'] = TOP_LEVEL_US_CATEGORIES[category]||category if TOP_LEVEL_US_CATEGORIES[category]||category
     params.merge!(extra_params)
-    fetch_as_json(build_url(:find_advanced, params))['findItemsAdvancedResponse']
+    fetch_as_json(build_url(:find_items, params))['findItemsAdvancedResponse']
   end
   
   # calls the "getHistograms" operation for a given category and returns the 'getHistogramsResponse' JSON as a Hash
@@ -113,7 +113,7 @@ module EbayFinding
     :keyword_recommendations => "getSearchKeywordsRecommendation", # Get recommended keywords for search
     :find_by_keywords => "findItemsByKeywords", # Search items by keywords
     :find_by_category => "findItemsByCategory", # Search items in a category
-    :find_advanced => "findItemsAdvanced", # Advanced search capabilities
+    :find_items => "findItemsAdvanced", # Advanced search capabilities
     :find_by_product_id => "findItemsByProduct", # Search items by a product identifier
     :find_in_store => "findItemsIneBayStores", # Search items in stores
     :histograms => "getHistograms" # Get category and domain meta data
