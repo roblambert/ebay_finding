@@ -79,7 +79,7 @@ module EbayFinding
   
   # calls the "getKeywordsRecommendations" operation for the provided keywords argument and returns the 'getSearchKeywordsRecommendationResponse' JSON as a Hash
   def self.keyword_recommendations(keywords, extra_params = {})
-    fetch_as_json(build_url(:keyword_recommendations, {'keywords'=>CGI.escape(keywords.gsub("!", ""))}.merge!(extra_params)))['getSearchKeywordsRecommendationResponse']
+    fetch_as_json(build_url(:keyword_recommendations, {'keywords'=>keywords}.merge!(extra_params)))['getSearchKeywordsRecommendationResponse']
   end
 
   private
@@ -95,7 +95,6 @@ module EbayFinding
     params['OPERATION-NAME'] = OPERATIONS.fetch(operation) || operation
     # add operation_params provided
     params.merge!(operation_params)
-    puts "#{BASE_URL}#{params.keys.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
     "#{BASE_URL}#{params.keys.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
   end
   
