@@ -65,7 +65,7 @@ module EbayFinding
       "paginationInput.entriesPerPage" => numResults,
       "sortOrder" => SORT_OPTIONS[sort]||sort
     }
-    params['keywords'] = CGI.escape(keywords) if keywords
+    params['keywords'] = keywords if keywords
     params['categoryId'] = TOP_LEVEL_US_CATEGORIES[category]||category if TOP_LEVEL_US_CATEGORIES[category]||category
     params.merge!(extra_params)
     fetch_as_json(build_url(:find_advanced, params))['findItemsAdvancedResponse']
