@@ -1,7 +1,7 @@
 = Simple Ruby access to the Ebay Finding API
 See: http://developer.ebay.com/products/finding/
 
-All calls are returned as Hashes extracted from the returned JSON root "...Response" node.
+All calls simply return the raw data from ebay, the default being JSON.
 
 == Installation
 
