@@ -12,3 +12,4 @@
   :affiliate_custom_id: # Custom ID, not required
   :global_id: "EBAY-US" # Not required. Default global_id to use in requests. For a list of values, see http://developer.ebay.com/devzone/finding/CallRef/Enums/GlobalIdList.html
   :user_agent: "Ruby-Wget" # user agent to send on requests to Ebay
+  :default_response_format: JSON #default format for results, JSON or XML. individual calls can be overridden with the "RESPONSE-DATA-FORMAT" parameter
