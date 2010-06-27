@@ -79,7 +79,7 @@ class EbayFinding
     params['OPERATION-NAME'] = OPERATIONS.fetch(operation) || operation
     # add operation_params provided
     params.merge!(operation_params)
-    url = "#{BASE_URL}#{params.keys.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
+    url = "#{BASE_URL}#{params.keys.sort.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
     puts url
     url
   end
