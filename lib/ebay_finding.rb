@@ -17,6 +17,28 @@ class EbayFinding
     fetch(build_url(:find_items, params))
   end
   
+  def search(criteria)
+    params = {
+      "outputSelector(0)"=>"AspectHistogram",
+      "paginationInput.entriesPerPage" => criteria.entries_per_page,
+      "sortOrder" => criteria.sort_order,
+      "paginationInput.pageNumber" => criteria.page_number
+    }
+    if criteria.category_id
+      params['categoryId'] = criteria.category_id
+    end
+    if criteria.keywords
+      params['keywords'] = criteria.keywords
+    end
+    aspect_count = 0
+    criteria.aspects.keys.each do |key|
+      params["aspectFilter(#{aspect_count}).aspectName"] = key
+      params["aspectFilter(#{aspect_count}).aspectValueName"] = criteria.aspects[key]
+      aspect_count+=1
+    end
+    fetch(build_url(:find_items, params))
+  end
+  
   # calls the "getHistograms" operation for a given category
   def histograms( category, extra_params = {})
     params = { "categoryId" => TOP_LEVEL_US_CATEGORIES[category]||category }.merge!(extra_params)
@@ -79,9 +101,7 @@ class EbayFinding
     params['OPERATION-NAME'] = OPERATIONS.fetch(operation) || operation
     # add operation_params provided
     params.merge!(operation_params)
-    url = "#{BASE_URL}#{params.keys.sort.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
-    puts url
-    url
+    "#{BASE_URL}#{params.keys.sort.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
   end
   
   # access to configuration parameters stored in ebay_finding.yml
@@ -154,5 +174,23 @@ class EbayFinding
   #   "EBAY-SG" => "eBay Singapore",
   #   "EBAY-US" => "eBay United States"
   # }
+
+end
+class EbaySearchCriteria
+  attr_accessor :category_id
+  attr_accessor :keywords
+  attr_accessor :aspects
+  attr_accessor :sort_order
+  attr_accessor :entries_per_page
+  attr_accessor :page_number
+
+  def initialize
+    @category_id = nil
+    @keywords = nil
+    @aspects = {}
+    @sort_order = "EndTimeSoonest"
+    @page_number = 1
+    @entries_per_page = 10
+  end
 
 end
