@@ -30,11 +30,16 @@ class EbayFinding
     if criteria.keywords
       params['keywords'] = criteria.keywords
     end
-    aspect_count = 0
-    criteria.aspects.keys.each do |key|
-      params["aspectFilter(#{aspect_count}).aspectName"] = key
-      params["aspectFilter(#{aspect_count}).aspectValueName"] = criteria.aspects[key]
-      aspect_count+=1
+    criteria.aspects.keys.each_index do |aspect_index|
+      params["aspectFilter(#{aspect_index}).aspectName"] = criteria.aspects.keys[aspect_index]
+      params["aspectFilter(#{aspect_index}).aspectValueName"] = criteria.aspects[criteria.aspects.keys[aspect_index]]
+    end
+    criteria.item_filters.each_index do |filter_index|
+      item_filter = criteria.item_filters[filter_index]
+      params["itemFilter(#{filter_index}).name"] = item_filter.name
+      params["itemFilter(#{filter_index}).value"] = item_filter.value
+      params["itemFilter(#{filter_index}).paramName"] = item_filter.paramName if item_filter.paramName
+      params["itemFilter(#{filter_index}).paramValue"] = item_filter.paramValue if item_filter.paramValue
     end
     fetch(build_url(:find_items, params))
   end
@@ -180,6 +185,7 @@ class EbaySearchCriteria
   attr_accessor :category_id
   attr_accessor :keywords
   attr_accessor :aspects
+  attr_accessor :item_filters
   attr_accessor :sort_order
   attr_accessor :entries_per_page
   attr_accessor :page_number
@@ -187,10 +193,25 @@ class EbaySearchCriteria
   def initialize
     @category_id = nil
     @keywords = nil
+    @item_filters = []
     @aspects = {}
     @sort_order = "EndTimeSoonest"
     @page_number = 1
     @entries_per_page = 10
   end
 
+end
+
+class ItemFilter
+  attr_accessor :name
+  attr_accessor :value
+  attr_accessor :paramName
+  attr_accessor :paramValue
+  
+  def initialize(name, value, paramName=nil, paramValue=nil)
+    @name = name
+    @value = value
+    @paramName = paramName
+    @paramValue = paramValue
+  end
 end
