@@ -3,20 +3,8 @@ require 'open-uri'
 # class to ease retrieving data from the Ebay Finding API: http://developer.ebay.com/products/finding/
 class EbayFinding
   
-  # calls the "findItemsAdvanced" operation.
-  # aims to make it easy to search by keyword and category as that's the most common search that I perform!
-  # extra_params are used explicitly in the request and override any base parameters including app_id, affiliate keys, etc.  
-  def find_items( keywords, category = nil, numResults = 5, sort = :end_time_soonest, extra_params = {} )
-    params = {
-      "paginationInput.entriesPerPage" => numResults,
-      "sortOrder" => SORT_OPTIONS[sort]||sort
-    }
-    params['keywords'] = keywords if keywords
-    params['categoryId'] = TOP_LEVEL_US_CATEGORIES[category]||category if TOP_LEVEL_US_CATEGORIES[category]||category
-    params.merge!(extra_params)
-    fetch(build_url(:find_items, params))
-  end
-  
+  # searches ebay (internally using the "findItemsAdvanced" method http://developer.ebay.com/DevZone/finding/CallRef/findItemsAdvanced.html )
+  # requires an EbaySearchCriteria instance
   def search(criteria)
     params = {
       "outputSelector(0)"=>"AspectHistogram",
@@ -41,18 +29,18 @@ class EbayFinding
       params["itemFilter(#{filter_index}).paramName"] = item_filter.paramName if item_filter.paramName
       params["itemFilter(#{filter_index}).paramValue"] = item_filter.paramValue if item_filter.paramValue
     end
-    fetch(build_url(:find_items, params))
+    fetch(build_url("findItemsAdvanced", params))
   end
   
   # calls the "getHistograms" operation for a given category
   def histograms( category, extra_params = {})
     params = { "categoryId" => TOP_LEVEL_US_CATEGORIES[category]||category }.merge!(extra_params)
-    fetch(build_url(:histograms, params))
+    fetch(build_url("getHistograms", params))
   end
   
   # calls the "getKeywordsRecommendations" operation for the provided keywords argument
   def keyword_recommendations(keywords, extra_params = {})
-    fetch(build_url(:keyword_recommendations, {'keywords'=>keywords}.merge!(extra_params)))
+    fetch(build_url("getSearchKeywordsRecommendation", {'keywords'=>keywords}.merge!(extra_params)))
   end
 
   # top level category ids for U.S., pulled from Trading API May 28, 2010
@@ -103,7 +91,7 @@ class EbayFinding
     # build standard app_id and affiliate parameters
     params = STANDARD_PARAMETERS.keys.inject({}) { |params,key| params[STANDARD_PARAMETERS[key]] = config_params[key] if config_params[key]; params }
     # add operation parameter
-    params['OPERATION-NAME'] = OPERATIONS.fetch(operation) || operation
+    params['OPERATION-NAME'] = operation
     # add operation_params provided
     params.merge!(operation_params)
     "#{BASE_URL}#{params.keys.sort.inject(""){|string,key| "#{string}&#{key}=#{CGI.escape(params[key].to_s)}"}}"
@@ -133,17 +121,6 @@ class EbayFinding
     :price_plus_shipping_highest => "PricePlusShippingHighest", # Sorts items by the combined cost of the item price plus the shipping cost, with highest combined price items listed first. Items are returned in the following groupings: highest total-cost items (for items where shipping was properly specified) appear first, followed by freight- shipping items, and then items for which no shipping was specified. Each group is sorted by price. 	findItemsAdvanced, findItemsByCategory, findItemsByKeywords, findItemsByProduct, findItemsIneBayStores
     :price_plus_shipping_lowest => "PricePlusShippingLowest", # Sorts items by the combined cost of the item price plus the shipping cost, with the lowest combined price items listed first. Items are returned in the following groupings: lowest total-cost items (for items where shipping was properly specified) appear first, followed by freight- shipping items, and then items for which no shipping was specified. Each group is sorted by price. 	findItemsAdvanced, findItemsByCategory, findItemsByKeywords, findItemsByProduct, findItemsIneBayStores
     :start_time_newest => "StartTimeNewest" # Sorts items by the start time, the most recently listed (newest) items appear first.
-  }
-
-
-  OPERATIONS = {
-    :keyword_recommendations => "getSearchKeywordsRecommendation", # Get recommended keywords for search
-    :find_by_keywords => "findItemsByKeywords", # Search items by keywords
-    :find_by_category => "findItemsByCategory", # Search items in a category
-    :find_items => "findItemsAdvanced", # Advanced search capabilities
-    :find_by_product_id => "findItemsByProduct", # Search items by a product identifier
-    :find_in_store => "findItemsIneBayStores", # Search items in stores
-    :histograms => "getHistograms" # Get category and domain meta data
   }
 
   STANDARD_PARAMETERS = {
@@ -202,6 +179,10 @@ class EbaySearchCriteria
 
 end
 
+# ItemFilter represents a single ItemFilter criterion
+# see:
+# http://developer.ebay.com/DevZone/finding/CallRef/types/ItemFilter.html
+# http://developer.ebay.com/DevZone/finding/CallRef/types/ItemFilterType.html
 class ItemFilter
   attr_accessor :name
   attr_accessor :value
@@ -215,3 +196,39 @@ class ItemFilter
     @paramValue = paramValue
   end
 end
+
+# Item Filter Names
+# * AvailableTo
+# * BestOfferOnly
+# * Condition
+# * Currency
+# * EndTimeFrom
+# * EndTimeTo
+# * ExcludeAutoPay
+# * ExcludeCategory
+# * ExcludeSeller
+# * FeaturedOnly
+# * FeedbackScoreMax
+# * FeedbackScoreMin
+# * FreeShippingOnly
+# * GetItFastOnly
+# * HideDuplicateItems
+# * ListingType
+# * LocalPickupOnly
+# * LocalSearchOnly
+# * LocatedIn
+# * LotsOnly
+# * MaxBids
+# * MaxDistance
+# * MaxPrice
+# * MaxQuantity
+# * MinBids
+# * MinPrice
+# * MinQuantity
+# * ModTimeFrom
+# * PaymentMethod
+# * Seller
+# * SellerBusinessType
+# * SoldItemsOnly
+# * TopRatedSellerOnly
+# * WorldOfGoodOnly
